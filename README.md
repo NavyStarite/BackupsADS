@@ -34,3 +34,61 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+
+
+npx create-next-app punto-de-venta-backup
+cd punto-de-venta-backup
+
+npm install mysql2 node-cron node-fetch@2 lucide-react
+
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+npm install -g tailwindcss
+
+npm install -D @tailwindcss/postcss
+
+
+
+
+Poblar Base de datos:
+USE PuntoDeVenta;
+
+
+
+INSERT INTO Productos (
+  CodigoBarras, Nombre, Marca, Presentacion, Proveedor,
+  PrecioVenta, Costo, Categoria, Cantidad, Estado
+) VALUES
+('000000000001', 'Coca-Cola 600ml', 'Coca-Cola', 'Botella', 'Coca-Cola FEMSA', 1.50, 1.00, 'Bebidas', 100, true),
+('000000000002', 'Pepsi 600ml', 'PepsiCo', 'Botella', 'PepsiCo México', 1.40, 0.95, 'Bebidas', 80, true),
+('000000000003', 'Agua Bonafont 1L', 'Bonafont', 'Botella', 'Danone', 1.00, 0.60, 'Bebidas', 120, true),
+('000000000004', 'Galletas Oreo', 'Oreo', 'Paquete 120g', 'Mondelez', 1.80, 1.20, 'Snacks', 50, true),
+('000000000005', 'Sabritas Clasicas', 'Sabritas', 'Bolsa 150g', 'PepsiCo', 1.90, 1.30, 'Snacks', 60, true),
+('000000000006', 'Chetos Torciditos', 'Cheetos', 'Bolsa 120g', 'PepsiCo', 1.70, 1.10, 'Snacks', 55, true),
+('000000000007', 'Pan Bimbo Blanco', 'Bimbo', 'Paquete 680g', 'Bimbo', 2.50, 1.80, 'Panadería', 40, true),
+('000000000008', 'Pan Integral Bimbo', 'Bimbo', 'Paquete 680g', 'Bimbo', 2.70, 2.00, 'Panadería', 35, true),
+('000000000009', 'Leche Lala 1L', 'Lala', 'Tetra Pak', 'Lala México', 2.00, 1.50, 'Lácteos', 70, true),
+('000000000010', 'Yogurt Danone Fresa', 'Danone', 'Vaso 240g', 'Danone', 1.20, 0.80, 'Lácteos', 45, true),
+('000000000011', 'Huevo San Juan 12pzas', 'San Juan', 'Docena', 'San Juan', 3.00, 2.30, 'Abarrotes', 30, true),
+('000000000012', 'Cereal Zucaritas', 'Kellogg\'s', 'Caja 300g', 'Kellogg\'s', 3.50, 2.70, 'Desayuno', 25, true),
+('000000000013', 'Arroz Verde Valle 1kg', 'Verde Valle', 'Bolsa', 'Verde Valle', 1.80, 1.20, 'Abarrotes', 60, true),
+('000000000014', 'Frijol Negro 1kg', 'Verde Valle', 'Bolsa', 'Verde Valle', 2.00, 1.40, 'Abarrotes', 50, true),
+('000000000015', 'Aceite Capullo 1L', 'Capullo', 'Botella', 'Grupo Altex', 3.00, 2.30, 'Abarrotes', 40, true),
+('000000000016', 'Salsa Valentina', 'Tamazula', 'Botella 370ml', 'Tamazula', 1.20, 0.80, 'Salsas', 65, true),
+('000000000017', 'Ketchup Heinz', 'Heinz', 'Botella 500ml', 'Kraft Heinz', 2.20, 1.50, 'Salsas', 45, true),
+('000000000018', 'Mayonesa McCormick', 'McCormick', 'Frasco 390g', 'McCormick México', 2.30, 1.70, 'Salsas', 50, true),
+('000000000019', 'Shampoo Head & Shoulders', 'H&S', 'Botella 400ml', 'P&G', 4.00, 3.20, 'Higiene', 30, true),
+('000000000020', 'Papel Higiénico Regio', 'Regio', 'Paquete 4 rollos', 'Kimberly-Clark', 2.60, 1.90, 'Higiene', 70, true),
+('000000000021', 'Detergente Ariel 800g', 'Ariel', 'Bolsa', 'P&G', 3.00, 2.10, 'Limpieza', 35, true),
+('000000000022', 'Cloro Cloralex 1L', 'Cloralex', 'Botella', 'AlEn', 1.60, 1.10, 'Limpieza', 40, true),
+('000000000023', 'Fabuloso 1L', 'Fabuloso', 'Botella', 'Colgate-Palmolive', 1.80, 1.20, 'Limpieza', 38, true),
+('000000000024', 'Suavitel 850ml', 'Suavitel', 'Botella', 'Colgate-Palmolive', 2.00, 1.40, 'Limpieza', 33, true),
+('000000000025', 'Jabón Zote Blanco', 'Zote', 'Barra', 'Fábrica La Corona', 0.90, 0.50, 'Limpieza', 80, true),
+('000000000026', 'Plátano Tabasco', 'Local', 'Kg', 'Productor Local', 0.70, 0.40, 'Frutas y Verduras', 90, true),
+('000000000027', 'Manzana Roja', 'Local', 'Kg', 'Productor Local', 0.90, 0.60, 'Frutas y Verduras', 80, true),
+('000000000028', 'Tomate Saladet', 'Local', 'Kg', 'Productor Local', 0.80, 0.50, 'Frutas y Verduras', 85, true),
+('000000000029', 'Cebolla Blanca', 'Local', 'Kg', 'Productor Local', 0.70, 0.40, 'Frutas y Verduras', 70, true),
+('000000000030', 'Limón Agrio', 'Local', 'Kg', 'Productor Local', 1.10, 0.70, 'Frutas y Verduras', 75, true);
