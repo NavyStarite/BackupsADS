@@ -1,59 +1,471 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 💻 Punto de Venta con Backups Automáticos
 
-First, run the development server:
+Este proyecto es un sistema de punto de venta (PDV) desarrollado con **Next.js**, **React**, **MySQL** y **Tailwind CSS**, que incluye funcionalidades de **respaldo automático de base de datos**, **historial de copias de seguridad**, y una **interfaz administrativa** para la gestión de las mismas.
+
+---
+
+## 🚀 Requisitos
+
+- Node.js (v18+ recomendado)
+- XAMPP (MySQL debe estar corriendo)
+- Git
+
+---
+
+## ⚙️ Instalación
+
+1. **Clona el repositorio:**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/tu-usuario/tu-repositorio.git
+cd tu-repositorio
+````
+
+2. **Instala las dependencias:**
+
+```bash
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Configura el entorno:**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Crea un archivo `.env.local` en la raíz del proyecto basado en el archivo de ejemplo:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env.local
+```
 
-## Learn More
+Edita `.env.local` y ajusta tus variables de entorno:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=           # tu contraseña de MySQL en XAMPP
+DB_NAME=PuntoDeVenta
+DB_PORT=3306
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Asegúrate de tener MySQL corriendo desde XAMPP.**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. **Importa la base de datos antes de iniciar la app:**
 
-## Deploy on Vercel
+Desde **phpMyAdmin** o consola de MySQL:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```sql
+-- Crea y selecciona la base de datos
+create database PuntoDeVenta;
+use PuntoDeVenta;
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+create table Usuarios(
+	IdUsuario int auto_increment primary key,
+	Rol varchar (20) not null,
+    Nombre varchar (50) unique not null,
+    contraseña varchar (255) not null,
+    Estado boolean default true,
+    UltimoInicioSesion datetime,
+    IntentosFallidos int default 0
+);
+
+create table Productos(
+	CodigoBarras varchar(50) primary key,
+    Nombre varchar(100) not null,
+    Marca varchar(50) not null,
+    Presentacion varchar(50) not null,
+    Proveedor varchar(50) not null,
+    PrecioVenta decimal(10,2) not null,
+    Costo decimal(10,2) not null,
+    Categoria varchar(50) not null,
+    Cantidad int not null,
+    Estado boolean default true
+);
+
+create table Promos(
+	IdPromo int auto_increment primary key,
+    M tinyint unsigned not null,
+    N tinyint unsigned not null,
+    FechaInicio date,
+    FechaFin date,
+    Descripcion varchar (100),
+    Estado boolean default true
+);
+
+create table ProductoPromo(
+	CodigoBarras varchar(50) not null,
+    IdPromo int not null,
+    primary key(CodigoBarras,IdPromo),
+    foreign key(CodigoBarras) references Productos(CodigoBarras),
+    foreign key(IdPromo) references Promos(IdPromo)
+);
+
+create table Clientes(
+	IdCliente int auto_increment primary key,
+    NombreCompleto varchar (255) not null,
+    Celular varchar (20) unique,
+    RFC varchar (20)
+);
+
+create table Creditos(
+	IdCredito int auto_increment primary key,
+    IdCliente int not null,
+    MontoCredito decimal(10,2) not null,
+    SaldoPendiente decimal(10,2) not null,
+    Fecha date not null,
+    Estado enum('Activo','Liquidado','Rechazado') default 'Activo',
+    foreign key (IdCliente) references Clientes (IdCliente)
+);
+
+create table AbonosCredito(
+	IdAbono int auto_increment primary key,
+    IdCredito int not null,
+    Monto decimal(10,2) not null,
+    FechaAbono datetime not null,
+    foreign key (IdCredito) references Creditos (IdCredito)
+    );
+
+create table Ventas(
+	IdVenta int auto_increment primary key,
+    IdCajero int,
+    FechaHora datetime not null,
+    MetodoPago enum('Efectivo','Tarjeta','Credito') not null,
+    TotalVenta decimal(10,2) not null,
+    foreign key (IdCajero) references Usuarios(IdUsuario)
+);
+
+create table DetalleVentas(
+	IdDetalle int auto_increment primary key,
+    IdVenta int not null,
+    CodigoBarras varchar(50) not null,
+    Cantidad int not null,
+    PrecioUnitario decimal(10,2) not null,
+    Importe decimal(10,2) not null,
+    foreign key (IdVenta) references Ventas(IdVenta),
+    foreign key (CodigoBarras) references Productos(CodigoBarras)
+);
+
+create table Devoluciones(
+	IdDevolucion int auto_increment primary key,
+    IdDetalle int not null,
+    CantidadDevuelta int not null,
+    Fecha datetime not null,
+    Motivo varchar (255),
+    foreign key (IdDetalle) references DetalleVentas (IdDetalle)
+    );
+    
+create table Facturas(
+	IdFacturas int auto_increment primary key,
+    IdVenta int,
+    IdCliente int,
+    RazonSocial varchar(255),
+    FechaEmision datetime not null,
+    foreign key (IdVenta) references Ventas (IdVenta),
+    foreign key (IdCliente) references Clientes(IdCliente)
+);
+
+create table Reportes (
+	IdReporte int auto_increment primary key,
+    Tipo enum('Quincenal','Mensual','Trimestral','Predictivo','Corte_Caja') not null,
+    Periodoini date not null,
+    PeriodoFin date not null,
+    RutaPDF varchar(255),
+    IdUsuario int not null,
+    FechaGen datetime not null,
+    foreign key (IdUsuario) references Usuarios (IdUsuario)
+    );
+    
+DELIMITER //
 
 
+-- ---------------------------------------------------USUARIOS--------------------------------------------------------------------------------------
+-- Crear usuario
+create procedure CrearUsuario(
+	in p_Rol varchar(20),
+    in p_Nombre varchar(50),
+    in p_Contraseña varchar(255)
+)begin
+	insert into Usuarios (Rol, Nombre, Contraseña, Estado, IntentosFallidos, UltimoInicioSesion)
+    values (p_rol, p_nombre,p_contraseña,true,0,null);
+end
+//
+
+-- Obtener usuarios activos
+create procedure ObtenerUsuariosActivos()
+begin
+    select IdUsuario, Rol, Nombre, Estado, UltimoInicioSesion, IntentosFallidos
+    from Usuarios
+    where Estado = true;
+end //
+
+-- Mostrar empleado por ID
+create procedure ObtenerUsuarioId(
+	in p_UsuarioId int 
+)
+begin
+		select IdUsuario, Rol, Nombre, Estado, UltimoInicioSesion, IntentosFallidos
+        from Usuarios
+        where IdUsuario = p_IdUsuario;
+end//
+
+-- Actualizar Usuario
+create procedure ActualizarUsuario(
+	in p_IdUsuario INT,
+    in p_Rol varchar(20),
+    in p_Nombre varchar(50),
+    in p_Contraseña varchar(255) -- Se espera que ya venga hasheada si es un cambio
+)
+begin
+	Update Usuarios
+    set
+		Rol=p_Rol,
+        Nombre = p_Nombre,
+        Contraseña = p_Contraseña
+    WHERE IdUsuario = p_IdUsuario;
+end //
+
+-- Actualizar el Ultimo inicio de sesion y los intentos fallidos
+create procedure ActualizarLoginUsuario(
+    in p_Nombre varchar(50),
+    in p_EsExitoso boolean
+)
+begin
+    if p_EsExitoso then
+        update Usuarios
+        set
+            UltimoInicioSesion = NOW(),
+            IntentosFallidos = 0
+        where Nombre = p_Nombre;
+    else
+        update Usuarios
+        set
+            IntentosFallidos = IntentosFallidos + 1
+        where Nombre = p_Nombre;
+    end if;
+end //
+
+-- Actualizar estado de usuario 
+CREATE PROCEDURE SP_DesactivarUsuario(
+    IN p_IdUsuario INT
+)
+BEGIN
+    UPDATE Usuarios
+    SET Estado = FALSE
+    WHERE IdUsuario = p_IdUsuario;
+END //
+
+-- Activar Usuario (desbloquear)
+CREATE PROCEDURE ActivarUsuario(
+    IN p_IdUsuario INT
+)
+BEGIN
+    UPDATE Usuarios
+    SET Estado = TRUE, IntentosFallidos = 0
+    WHERE IdUsuario = p_IdUsuario;
+END //
+-- ---------------------------------------------------PRODUCTOS--------------------------------------------------------------------------------------
+
+-- Crear Producto
+CREATE PROCEDURE SP_CrearProducto(
+    IN p_CodigoBarras VARCHAR(50),
+    IN p_Nombre VARCHAR(100),
+    IN p_Marca VARCHAR(50),
+    IN p_Presentacion VARCHAR(50),
+    IN p_Proveedor VARCHAR(50),
+    IN p_PrecioVenta DECIMAL(10,2),
+    IN p_Costo DECIMAL(10,2),
+    IN p_Categoria VARCHAR(50),
+    IN p_Cantidad INT
+)
+BEGIN
+    INSERT INTO Productos (CodigoBarras, Nombre, Marca, Presentacion, Proveedor, PrecioVenta, Costo, Categoria, Cantidad, Estado)
+    VALUES (p_CodigoBarras, p_Nombre, p_Marca, p_Presentacion, p_Proveedor, p_PrecioVenta, p_Costo, p_Categoria, p_Cantidad, TRUE);
+END //
+
+-- Obtener Productos (todos los activos)
+CREATE PROCEDURE ObtenerProductosActivos()
+BEGIN
+    SELECT CodigoBarras, Nombre, Marca, Presentacion, Proveedor, PrecioVenta, Costo, Categoria, Cantidad, Estado
+    FROM Productos
+    WHERE Estado = TRUE;
+END //
+
+-- Obtener Producto por Código de Barras
+CREATE PROCEDURE SP_ObtenerProductoPorCodigoBarras(
+    IN p_CodigoBarras VARCHAR(50)
+)
+BEGIN
+    SELECT CodigoBarras, Nombre, Marca, Presentacion, Proveedor, PrecioVenta, Costo, Categoria, Cantidad, Estado
+    FROM Productos
+    WHERE CodigoBarras = p_CodigoBarras;
+END //
+
+-- Actualizar Producto (todos los campos excepto CodigoBarras)
+CREATE PROCEDURE ActualizarProducto(
+    IN p_CodigoBarras VARCHAR(50),
+    IN p_Nombre VARCHAR(100),
+    IN p_Marca VARCHAR(50),
+    IN p_Presentacion VARCHAR(50),
+    IN p_Proveedor VARCHAR(50),
+    IN p_PrecioVenta DECIMAL(10,2),
+    IN p_Costo DECIMAL(10,2),
+    IN p_Categoria VARCHAR(50),
+    IN p_Cantidad INT
+)
+BEGIN
+    UPDATE Productos
+    SET
+        Nombre = p_Nombre,
+        Marca = p_Marca,
+        Presentacion = p_Presentacion,
+        Proveedor = p_Proveedor,
+        PrecioVenta = p_PrecioVenta,
+        Costo = p_Costo,
+        Categoria = p_Categoria,
+        Cantidad = p_Cantidad
+    WHERE CodigoBarras = p_CodigoBarras;
+END //
+
+-- Actualizar Cantidad de Producto (para ventas/devoluciones/entradas)
+CREATE PROCEDURE ActualizarCantidadProducto(
+    IN p_CodigoBarras VARCHAR(50),
+    IN p_CantidadCambio INT -- Puede ser positivo para entradas, negativo para ventas/salidas
+)
+BEGIN
+    UPDATE Productos
+    SET Cantidad = Cantidad + p_CantidadCambio
+    WHERE CodigoBarras = p_CodigoBarras;
+END //
+
+-- Dar de baja un producto (Borrado Lógico)
+CREATE PROCEDURE DesactivarProducto(
+    IN p_CodigoBarras VARCHAR(50)
+)
+BEGIN
+    UPDATE Productos
+    SET Estado = FALSE
+    WHERE CodigoBarras = p_CodigoBarras;
+END //
+-- ---------------------------------------------------PROMOS--------------------------------------------------------------------------------------
+
+-- Crear Promoción (para 2x1, 3x2, MxN)
+CREATE PROCEDURE CrearPromo(
+    IN p_M TINYINT UNSIGNED,
+    IN p_N TINYINT UNSIGNED,
+    IN p_FechaInicio DATE,
+    IN p_FechaFin DATE,
+    IN p_Descripcion VARCHAR(100)
+)
+BEGIN
+    INSERT INTO Promos (M, N, FechaInicio, FechaFin, Descripcion, Estado)
+    VALUES (p_M, p_N, p_FechaInicio, p_FechaFin, p_Descripcion, TRUE);
+END //
+
+-- Leer Promociones (obtener todas las activas y vigentes)
+CREATE PROCEDURE ObtenerPromosActivas()
+BEGIN
+    SELECT IdPromo, M, N, FechaInicio, FechaFin, Descripcion, Estado
+    FROM Promos
+    WHERE Estado = TRUE AND FechaFin >= CURDATE();
+END //
+
+-- Leer Promoción por ID
+CREATE PROCEDURE ObtenerPromoPorId(
+    IN p_IdPromo INT
+)
+BEGIN
+    SELECT IdPromo, M, N, FechaInicio, FechaFin, Descripcion, Estado
+    FROM Promos
+    WHERE IdPromo = p_IdPromo;
+END //
+
+-- Actualizar Promoción (modificar detalles de una promoción existente)
+CREATE PROCEDURE ActualizarPromo(
+    IN p_IdPromo INT,
+    IN p_M TINYINT UNSIGNED,
+    IN p_N TINYINT UNSIGNED,
+    IN p_FechaInicio DATE,
+    IN p_FechaFin DATE,
+    IN p_Descripcion VARCHAR(100)
+)
+BEGIN
+    UPDATE Promos
+    SET
+        M = p_M,
+        N = p_N,
+        FechaInicio = p_FechaInicio,
+        FechaFin = p_FechaFin,
+        Descripcion = p_Descripcion
+    WHERE IdPromo = p_IdPromo;
+END //
+
+-- Desactivar Promoción (Borrado Lógico)
+CREATE PROCEDURE DesactivarPromo(
+    IN p_IdPromo INT
+)
+BEGIN
+    UPDATE Promos
+    SET Estado = FALSE
+    WHERE IdPromo = p_IdPromo;
+END //
+
+-- Activar Promoción
+CREATE PROCEDURE ActivarPromo(
+    IN p_IdPromo INT
+)
+BEGIN
+    UPDATE Promos
+    SET Estado = TRUE
+    WHERE IdPromo = p_IdPromo;
+END //
+-- 1. Asignar Producto a Promoción
+CREATE PROCEDURE SP_AsignarProductoPromo(
+    IN p_CodigoBarras VARCHAR(50),
+    IN p_IdPromo INT
+)
+BEGIN
+    INSERT INTO ProductoPromo (CodigoBarras, IdPromo)
+    VALUES (p_CodigoBarras, p_IdPromo);
+END //
+
+-- 2. Obtener Productos de una Promoción Específica
+CREATE PROCEDURE SP_ObtenerProductosDePromo(
+    IN p_IdPromo INT
+)
+BEGIN
+    SELECT pp.CodigoBarras, p.Nombre, p.PrecioVenta
+    FROM ProductoPromo pp
+    JOIN Productos p ON pp.CodigoBarras = p.CodigoBarras
+    WHERE pp.IdPromo = p_IdPromo AND p.Estado = TRUE; -- Mostrar solo productos activos
+END //
+
+-- 3. Obtener Promociones de un Producto Específico
+CREATE PROCEDURE SP_ObtenerPromosDeProducto(
+    IN p_CodigoBarras VARCHAR(50)
+)
+BEGIN
+    SELECT pp.IdPromo, pr.M, pr.N, pr.FechaInicio, pr.FechaFin, pr.Descripcion
+    FROM ProductoPromo pp
+    JOIN Promos pr ON pp.IdPromo = pr.IdPromo
+    WHERE pp.CodigoBarras = p_CodigoBarras AND pr.Estado = TRUE AND pr.FechaFin >= CURDATE(); -- Mostrar solo promos activas y vigentes
+END //
+
+-- 4. Eliminar Asignación de Producto a Promoción
+CREATE PROCEDURE SP_EliminarProductoDePromo(
+    IN p_CodigoBarras VARCHAR(50),
+    IN p_IdPromo INT
+)
+BEGIN
+    DELETE FROM ProductoPromo
+    WHERE CodigoBarras = p_CodigoBarras AND IdPromo = p_IdPromo;
+END //
+
+DELIMITER ;
+```
 
 
-npx create-next-app punto-de-venta-backup
-cd punto-de-venta-backup
+6. **Pobla la base de datos antes de iniciar la app:**
 
-npm install mysql2 node-cron node-fetch@2 lucide-react
+```sql
 
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-
-npm install -g tailwindcss
-
-npm install -D @tailwindcss/postcss
-
-
-
-
-Poblar Base de datos:
 USE PuntoDeVenta;
 
 
@@ -92,3 +504,47 @@ INSERT INTO Productos (
 ('000000000028', 'Tomate Saladet', 'Local', 'Kg', 'Productor Local', 0.80, 0.50, 'Frutas y Verduras', 85, true),
 ('000000000029', 'Cebolla Blanca', 'Local', 'Kg', 'Productor Local', 0.70, 0.40, 'Frutas y Verduras', 70, true),
 ('000000000030', 'Limón Agrio', 'Local', 'Kg', 'Productor Local', 1.10, 0.70, 'Frutas y Verduras', 75, true);
+
+```
+
+---
+
+## ▶️ Ejecución
+
+```bash
+npm run dev
+```
+
+Esto iniciará la aplicación en modo desarrollo. Accede desde tu navegador en:
+
+```
+http://localhost:3000
+```
+
+---
+
+## 🗃 Backups
+
+El sistema genera automáticamente archivos `.sql` de respaldo de la base de datos en la carpeta `/backups`.
+
+### Para que funcione el backup necesitas:
+
+* Tener instalado `mysqldump` (viene con MySQL de XAMPP)
+* Asegúrate de que `mysqldump` esté en el **PATH del sistema**
+
+Ejemplo de salida:
+
+```
+backups/
+├── PuntoDeVenta_completo_2025-05-22_17-06.sql
+├── PuntoDeVenta_ventas_2025-05-22_17-02.sql
+└── ...
+```
+
+---
+
+## 📝 Créditos
+
+Desarrollado como parte del proyecto de Ingeniería de Software.
+
+---
