@@ -543,8 +543,3 @@ backups/
 
 ---
 
-## 📝 Créditos
-
-Desarrollado como parte del proyecto de Ingeniería de Software.
-
----
