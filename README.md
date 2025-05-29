@@ -18,8 +18,8 @@ Este proyecto es un sistema de punto de venta (PDV) desarrollado con **Next.js**
 1. **Clona el repositorio:**
 
 ```bash
-git clone https://github.com/tu-usuario/tu-repositorio.git
-cd tu-repositorio
+git [https://github.com/NavyStarite/BackupsADS/tree/master](https://github.com/NavyStarite/BackupsADS/tree/master)
+cd BackupsADS
 ````
 
 2. **Instala las dependencias:**
