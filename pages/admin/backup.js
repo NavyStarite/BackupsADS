@@ -7,26 +7,25 @@ export default function BackupPage() {
   const [backupHistory, setBackupHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Función para cargar el historial de copias de seguridad
-    async function loadBackupHistory() {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/database/backup-history');
-        
-        if (response.ok) {
-          const data = await response.json();
-          setBackupHistory(data.history);
-        } else {
-          console.error('Error al cargar el historial de copias de seguridad');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+  // Función para cargar el historial
+  const loadBackupHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/database/backup-history');
+      if (response.ok) {
+        const data = await response.json();
+        setBackupHistory(data.history);
+      } else {
+        console.error('Error al cargar el historial de copias de seguridad');
       }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     loadBackupHistory();
   }, []);
 
@@ -39,40 +38,38 @@ export default function BackupPage() {
 
       <div className="max-w-5xl mx-auto py-8 px-4">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Gestión de Copias de Seguridad</h1>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Panel principal de backup */}
           <div className="md:col-span-2">
-            <BackupSistemaPDV />
+            <BackupSistemaPDV onBackupComplete={loadBackupHistory} />
           </div>
-          
+
           {/* Panel de información */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Información</h2>
-            
+
             <div className="space-y-4 text-sm">
               <div>
                 <h3 className="font-medium text-gray-700">Backup Completo</h3>
                 <p className="text-gray-600">Incluye todas las tablas de la base de datos PuntoDeVenta.</p>
               </div>
-              
               <div>
                 <h3 className="font-medium text-gray-700">Backup de Inventario</h3>
                 <p className="text-gray-600">Incluye solo las tablas: Productos, Promos y ProductoPromo.</p>
               </div>
-              
               <div>
                 <h3 className="font-medium text-gray-700">Backup de Ventas</h3>
                 <p className="text-gray-600">Incluye las tablas: Ventas, DetalleVentas, Devoluciones, Facturas, Clientes, Creditos y AbonosCredito.</p>
               </div>
             </div>
           </div>
-          
+
           {/* Historial de backups */}
           <div className="md:col-span-3">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Historial de Copias de Seguridad</h2>
-              
+
               {loading ? (
                 <p className="text-gray-500 text-center py-4">Cargando historial...</p>
               ) : backupHistory.length > 0 ? (

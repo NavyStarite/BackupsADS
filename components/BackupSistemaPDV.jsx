@@ -1,7 +1,7 @@
 // components/BackupSistemaPDV.js
 import { useState } from 'react';
 
-export default function BackupSistemaPDV({ onBackupCreated }) {
+export default function BackupSistemaPDV({ onBackupComplete }) {
   const [tipoBackup, setTipoBackup] = useState('completo');
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
@@ -28,8 +28,8 @@ export default function BackupSistemaPDV({ onBackupCreated }) {
       setMensaje(data.message);
 
       // Notificar al padre para que recargue historial
-      if (typeof onBackupCreated === 'function') {
-        onBackupCreated();
+      if (typeof onBackupComplete === 'function') {
+        onBackupComplete();
       }
     } catch (e) {
       setError(e.message);
