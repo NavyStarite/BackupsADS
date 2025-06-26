@@ -56,11 +56,15 @@ export default function BackupPage() {
               </div>
               <div>
                 <h3 className="font-medium text-gray-700">Backup de Inventario</h3>
-                <p className="text-gray-600">Incluye solo las tablas: Productos, Promos y ProductoPromo.</p>
+                <p className="text-gray-600">Incluye las tablas: Productos, Promos, ProductoPromo y CategoriaP.</p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-700">Backup de Ventas</h3>
-                <p className="text-gray-600">Incluye las tablas: Ventas, DetalleVentas, Devoluciones, Facturas, Clientes, Creditos y AbonosCredito.</p>
+                <p className="text-gray-600">Incluye las tablas: Ventas, DetalleVentas, Devoluciones, Facturas, Clientes y CorteCaja.</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Backup de Usuarios</h3>
+                <p className="text-gray-600">Incluye solo la tabla Usuarios.</p>
               </div>
             </div>
           </div>

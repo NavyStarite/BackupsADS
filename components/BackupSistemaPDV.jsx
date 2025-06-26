@@ -1,4 +1,4 @@
-// components/BackupSistemaPDV.js
+// components/BackupSistemaPDV.jsx
 import { useState } from 'react';
 
 export default function BackupSistemaPDV({ onBackupComplete }) {
@@ -52,6 +52,7 @@ export default function BackupSistemaPDV({ onBackupComplete }) {
         <option value="completo">Completo</option>
         <option value="inventario">Inventario</option>
         <option value="ventas">Ventas</option>
+        <option value="usuarios">Usuarios</option>
       </select>
 
       <button

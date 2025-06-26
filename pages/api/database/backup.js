@@ -1,3 +1,4 @@
+// pages/api/database/backup.js
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
@@ -27,11 +28,15 @@ export default async function handler(req, res) {
       break;
     case 'ventas':
       filename = `PuntoDeVenta_ventas_${timestamp}.sql`;
-      tablas = 'Ventas DetalleVentas';
+      tablas = 'Ventas DetalleVentas Devoluciones Facturas Clientes CorteCaja';
       break;
     case 'inventario':
       filename = `PuntoDeVenta_inventario_${timestamp}.sql`;
-      tablas = 'Productos Promos ProductoPromo';
+      tablas = 'Productos Promos ProductoPromo CategoriaP';
+      break;
+    case 'usuarios':
+      filename = `PuntoDeVenta_usuarios_${timestamp}.sql`;
+      tablas = 'Usuarios';
       break;
     default:
       return res.status(400).json({ message: 'Tipo de backup no válido' });
@@ -40,8 +45,8 @@ export default async function handler(req, res) {
   const filePath = path.join(backupDir, filename);
   console.log(`Iniciando backup ${tipo} de la base de datos ${database} en ${filePath}`);
 
-  // 👉 Comando modificado para evitar prompt de contraseña
-  const command = `echo ${config.password} | mysqldump -h ${config.host} -u ${config.user} --password=${config.password} ${database} ${tablas} > "${filePath}"`;
+  // Comando modificado para evitar prompt de contraseña
+  const command = `mysqldump -h ${config.host} -u ${config.user} --password=${config.password} ${database} ${tablas} > "${filePath}"`;
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
